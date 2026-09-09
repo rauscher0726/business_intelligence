@@ -1,0 +1,93 @@
+---
+title: "Class 05"
+author: "Andrew Rauscher"
+date: "2026-09-09"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    number_sections: TRUE
+    code_folding: show
+    code_download: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Game 01: Find your seat
+
+## What to find: campus is a named list: a briefing and five very different places. One of the places is the business school. Its element holds a field called code. Type that code. 
+
+```{r}
+campus = jsonlite::fromJSON(
+  "https://isa401-find-your-seat.vercel.app/campus.json")
+
+dplyr::glimpse(campus)
+
+fsb = campus[['Farmer']] # campus$Farmer; or
+fsb$code
+```
+
+```{r}
+#dplyr::glimpse(fsb)
+
+sec_floor = fsb$floors[["2"]]
+sec_floor$sections
+
+# equivalent
+fsb$floors[[3]]$sections # Using the position of the name of the list
+
+```
+
+
+```{r}
+df = sec_floor$rooms
+df # or equivalently sec_floor$rooms
+df[6, 2]
+```
+
+## Reading the Excel File
+
+```{r}
+
+occupation = readxl::read_excel(
+  path = "data/occupation.xlsx", sheet = "Table 1.4", skip = 1
+  )
+
+# Optional: clean the bottom three rows
+occupation = occupation[-c(32,33,34), ] # delete three specific rows, keep all cols (since after the , is empty) --> 1:7
+
+```
+
+
+## JSON Data
+
+```{r}
+json_url = paste0(
+  "https://data.cincinnati-oh.gov/",
+  "resource/rvmt-pkmq.json?$limit=100")
+crashes_json = jsonlite::fromJSON(json_url)
+dplyr::glimpse(
+  crashes_json[, c("crashdate", "dayofweek",
+                   "crashseverity", "age")])
+```
+
+
+## Data Import for Cybersecurity Game
+
+```{r}
+logins = readr::read_csv("https://isa401-import-heist.vercel.app/api/stage1?seat=R1-2&s=A")
+
+logins$account
+logins$failed_attempts
+
+log = jsonlite::fromJSON("https://isa401-import-heist.vercel.app/api/stage2?key=smithj31&seat=R1-2&s=A")
+log$events
+
+jsonlite::fromJSON("https://isa401-import-heist.vercel.app/api/finish?code=6&seat=R1-2&s=A")
+```
+
+
+
+
