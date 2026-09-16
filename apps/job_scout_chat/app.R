@@ -1,3 +1,5 @@
+#install.packages("querychat", dependencies = T)
+
 con = DBI::dbConnect(RSQLite::SQLite(), "data/scout.db")
 
 client = ellmer::chat_openai(
@@ -14,3 +16,6 @@ qc = querychat::querychat(
 )
 
 qc$app()
+
+
+#> usethis::edit_r_environ("project")
