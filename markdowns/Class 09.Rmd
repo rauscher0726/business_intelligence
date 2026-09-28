@@ -1,0 +1,78 @@
+---
+title: "Class 09"
+author: "Andrew Rauscher"
+date: "2026-09-28"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    number_sections: TRUE
+    code_folding: show
+    code_download: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## USA Jobs
+
+```{r}
+httr2::request("https://data.usajobs.gov/api/search") |>
+  httr2::req_url_query(Keyword = "Data Analyst", ResultsPerPage = 500) |>
+  httr2::req_headers(
+    Host = "data.usajobs.gov",
+    "User-Agent" = "fmegahed@miamioh.edu",
+    "Authorization-Key" = Sys.getenv("USAJOBS_API_KEY")
+  ) |>
+  httr2::req_perform() |> 
+  httr2::resp_body_string() |> 
+  jsonlite::fromJSON(flatten = T) -> usa_jobs_data
+
+
+usa_jobs_df = usa_jobs_data$SearchResult$SearchResultItems
+
+jobs_small = usa_jobs_df |>
+  dplyr::select(
+    title = MatchedObjectDescriptor.PositionTitle,
+    department = MatchedObjectDescriptor.DepartmentName,
+    agency = MatchedObjectDescriptor.OrganizationName,
+    location = MatchedObjectDescriptor.PositionLocationDisplay,
+    closes = MatchedObjectDescriptor.ApplicationCloseDate
+  )
+
+## Easy way -- since we looked for data analyst as a key word
+nrow(jobs_small)
+```
+
+```{r}
+#q 2
+table(jobs_small$department) |> sort(decreasing = T) |> head(3)
+```
+
+```{r}
+jobs_small |> dplyr::count(department) |> 
+  dplyr::arrange(dplyr::desc(n)) |> head(3)
+```
+
+```{r}
+#The harder way (but being literal)
+jobs_small |> dplyr::filter(title == 'Data Analyst') -> count_literal
+
+count_literal |> dplyr::count(department) |> dplyr::arrange(dplyr::desc(n))
+```
+
+
+```{r}
+## the harder way (without being literal)
+# Jesse -> Data Analyst or Data Analytics side-by-side
+index_data_analyst = jobs_small$title |> 
+  stringr::str_detect("Data Analytics|Data Analyst")
+
+# given that this is a true or false type result
+# true rows will be kept
+# , nothing means keep all columns
+count_jesse_standard = jobs_small[index_data_analyst , ]
+count_jesse_standard  |> dplyr::count(department) |> dplyr::arrange(dplyr::desc(n))
+```
+
