@@ -6,6 +6,11 @@ A twelve-line [querychat](https://github.com/posit-dev/querychat) app built in I
 
 **Live app:** (https://github.com/rauscher0726/business_intelligence)
 
+Which Columbus neighbourhood has the priciest entire homes?
+
+Do superhosts charge more per night than other hosts? Show it as a bar chart.
+
+How many listings could host a party of ten?
 ---
 
 ## What is this app?
