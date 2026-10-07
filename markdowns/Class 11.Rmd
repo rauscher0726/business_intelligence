@@ -1,0 +1,118 @@
+---
+title: "Class 11"
+author: "Andrew Rauscher"
+date: "2026-09-30"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    number_sections: TRUE
+    code_folding: show
+    code_download: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Learning Objectives for Today
+
+- Scrape multiple webpages using 'for' loops;
+
+- Scrape ,multiple webpages using the 'purrr::map()' type functions, which would also make you write your own custom functions in R.
+
+## Extending the Course Bulletin Scrape for multiple departments
+
+For the sake of this example, let us scrape the following pages:
+[ISA](https://bulletin.miamioh.edu/courses-instruction/isa/) and
+[MKT](https://bulletin.miamioh.edu/courses-instruction/mkt/)
+
+
+From the logic shown in class, you can essentially do that for all FDB departments
+
+
+Note that if you are doing it for just a few departments, you can just repeat your code a few times; howwever, this is bad practice so we will not do this in class. Software engineers tend to refer to this as: **DRY** (dont repeat yourself).
+
+```{r bulletin}
+dept_abbr = c('acc', 'bus', 'isa', 'mkt') # Extending the example to 4 depts
+# Line below illustrates how the url can be constructed by pasting0 (i.e, no space) the base_url, dept_abbreviation and the forward slash
+
+courses_df = data.frame() # Initialize the container
+for (dept_name in dept_abbr) {
+  cat(rep("-",25))
+  print(dept_name)
+  dept_url = paste0(
+    "https://bulletin.miamioh.edu/courses-instruction/", dept_name, "/")
+  
+  # For the titles, I will use the selector gadget and for the desc, I will use the inspector (to show you alternative CSS selectors for what we did on Mon)
+  webpage = rvest::read_html(dept_url)
+  
+  webpage |> rvest::html_elements("strong") |> rvest::html_text2() -> titles
+  webpage |> 
+    rvest::html_elements("#sc_sccoursedescs > div > p.courseblockdesc") |>
+  rvest::html_text2() -> descs
+  
+  df = data.frame(title = titles, desc = descs)
+  df$title[1] |> print() # Showing only the first course title
+  
+  courses_df = rbind(courses_df, df)
+  cat(rep("-", 25))
+}
+```
+
+
+## Re-Examining the Prior Example with the 'purrr' package
+
+My preferred approach with the purrr functions is to first createe my own function and then use it within the package
+
+```{r}
+scrape_mu_bulletin = function(dept_url){
+
+  webpage = rvest::read_html(dept_url)
+  
+  webpage |> rvest::html_elements("strong") |> rvest::html_text2() -> titles
+  webpage |> 
+    rvest::html_elements("#sc_sccoursedescs > div > p.courseblockdesc") |>
+    rvest::html_text2() -> descs
+  
+  df = data.frame(title = titles, desc = descs)
+  
+  return(df)
+}
+
+test = scrape_mu_bulletin("https://bulletin.miamioh.edu/courses-instruction/bus/")
+
+dept_abbr = c('acc', 'bus', 'isa', 'mkt')
+my_urls = paste0(
+  "https://bulletin.miamioh.edu/courses-instruction/", # Single chr string
+  dept_abbr, # vector of four obs
+  "/" # single chr string
+  )
+
+# The map functions take one or more inputs (depending on the function you are using)
+# In this example, we only have 1 input for our functions
+# So we used map_() instead of map2_() [2 is if you have two inputs], p_map()
+#[for three or more inputs]
+# .x = the vector you are iterating over
+
+courses_df_from_purrr = purrr::map_df(.x = my_urls, .f = scrape_mu_bulletin)
+
+head(courses_df_from_purrr)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
