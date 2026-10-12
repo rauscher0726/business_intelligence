@@ -1,0 +1,169 @@
+---
+title: "Exam 1"
+author: "Andrew Rauscher"
+date: "2026-10-12"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    number_sections: TRUE
+    code_folding: show
+    code_download: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Question 1
+```{r question 1}
+penguins = readr::read_csv("https://raw.githubusercontent.com/fmegahed/isa401/main/data/penguin_captures.csv")
+```
+
+# Question 2
+```{r question 2}
+
+crashes_by_day = c(2020, 2241, 2327, 2285, 2380, "1866", 1664)
+names(crashes_by_day) = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+sum(crashes_by_day > 300)
+
+```
+
+# Question 4
+```{r question 4}
+library(jsonlite)
+
+campus <- fromJSON("https://isa401-find-your-seat.vercel.app/campus.json")
+
+campus$Farmer$floors$`1`$sections
+```
+# Question 6
+```{r question 6}
+
+library(httr2)
+
+resp <- request("https://data.cincinnati-oh.gov/resource/rvmt-pkmq.json") |>
+  req_url_query(
+    `$select` = "count(*) AS n",
+    `$where` = "crashdate >= '2026-07-01T00:00:00' AND crashdate < '2026-08-01T00:00:00'"
+  ) |>
+  req_perform() |>
+  resp_body_json()
+
+as.integer(resp[[1]]$n)
+```
+# Question 7
+```{r question 7}
+
+library(rvest)
+
+base_url <- "https://isa401-salvage.vercel.app/exam/registry?start=1"
+
+url    <- base_url
+starts <- character()
+pages  <- list()
+
+repeat {
+  pg <- read_html(url)
+  pages[[length(pages) + 1]] <- pg
+
+  # record this page's start value ("none" for the first page if it has no ?start=)
+  s <- regmatches(url, regexpr("(?<=start=)[0-9]+", url, perl = TRUE))
+  starts <- c(starts, if (length(s)) s else "none")
+
+  # find the "Next" link; adjust the text if the site uses "›" or "Older" etc.
+  nxt <- html_element(pg, xpath = "//a[contains(normalize-space(.), 'Next')]")
+  if (is.na(nxt)) break
+  url <- url_absolute(html_attr(nxt, "href"), url)
+  Sys.sleep(1)  # be polite to the server
+}
+
+starts            # Q1: the start values across pages
+length(pages)     # number of pages
+
+n_per_page <- sapply(pages, function(pg) length(html_elements(pg, ".wreck")))
+
+n_per_page        # wrecks on each page; the last page is often shorter
+sum(n_per_page)   # Q1: total wrecks in the registry
+
+```
+
+```{r}
+library(rvest)
+
+base_url <- "https://isa401-salvage.vercel.app/exam/registry?start=1"
+
+# 1. Visit every page by following the "Next" link -------------------------
+url    <- base_url
+starts <- character()
+pages  <- list()
+
+repeat {
+  pg <- read_html(url)
+  pages[[length(pages) + 1]] <- pg
+
+  s <- regmatches(url, regexpr("(?<=start=)[0-9]+", url, perl = TRUE))
+  starts <- c(starts, if (length(s)) s else "none")
+
+  nxt <- html_element(pg, xpath = "//a[contains(normalize-space(.), 'Next')]")
+  if (is.na(nxt)) break
+  url <- url_absolute(html_attr(nxt, "href"), url)
+  Sys.sleep(1)
+}
+
+# 2. Choose the class selector ------------------------------------------
+# Layout A: #w2 is the list, each <li> is one wreck, the class is its <span>
+# Layout B: each wreck is its own w-block, the class is the first <li>'s <span>
+sel_A <- "#w2 > div > ul > li > span"
+sel_B <- "[id^='w'] > div > ul > li:nth-child(1) > span"
+
+n_A <- length(html_elements(pages[[1]], sel_A))
+n_B <- length(html_elements(pages[[1]], sel_B))
+cat("Matches on page 1 -> layout A:", n_A, " layout B:", n_B, "\n")
+
+class_sel <- if (n_A >= n_B) sel_A else sel_B
+cat("Using selector:", class_sel, "\n")
+
+# 3. Scrape the class of every wreck into one vector --------------------
+classes <- trimws(unlist(lapply(pages, function(pg) {
+  html_text2(html_elements(pg, class_sel))
+})))
+
+# 4. Answers and checks -------------------------------------------------
+starts                          # Q1: start values across pages
+length(classes)                 # Q1: number of wrecks in the registry
+head(classes, 10)               # should be class names only
+table(classes)                  # look for spelling variants
+sum(classes == "Dreadnought")   # Q3: number of Dreadnoughts
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
