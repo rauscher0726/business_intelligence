@@ -1,3 +1,5 @@
 /.Rproj.user
 .Renviron
 .Rhistory
+data/covid_cases_county.csv
+tableau/class18-covid-count.twbx
