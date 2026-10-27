@@ -1,0 +1,52 @@
+---
+title: "practice exam"
+author: "Andrew Rauscher"
+date: "2026-10-12"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    number_sections: TRUE
+    code_folding: show
+    code_download: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+sum(grepl("@miamioh\\.edu$", hibp$Email))
+```
+
+```{r}
+
+url <- "https://miamioh.edu/policy-library/students/undergraduate/academic-regulations/index.html"
+
+page <- rvest::read_html(url)
+
+mu_policies <- page |>
+  rvest::html_elements(".news-lockup__title a") |>
+  rvest::html_attr("href") |>
+  xml2::url_absolute(base = url)
+
+length(mu_policies)   # should be 27
+mu_policies
+```
+
+
+```{r}
+'https://miamioh.edu/policy-library/students/undergraduate/academic-regulations/index.html' |> 
+  rvest::read_html() |> 
+  rvest::html_elements('a.news-lockup__body-link') |> 
+  rvest::html_attr(name = 'href') |> 
+  # optional to make absolute URLs instead of partials
+  rvest::url_absolute('https://miamioh.edu/policy-library/') -> mu_policies
+
+mu_policies
+```
+
+
+
+
+

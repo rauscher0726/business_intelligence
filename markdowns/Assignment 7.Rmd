@@ -1,0 +1,53 @@
+---
+title: "Assignment 7"
+author: "Andrew Rauscher"
+date: "2026-10-12"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    number_sections: TRUE
+    code_folding: show
+    code_download: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r question 1}
+
+base_url <- "https://www.miamioh.edu/fsb/academics/"
+
+dept_urls <- c(
+  "Accountancy"      = paste0(base_url, "accountancy/about/faculty-staff/index.html"),
+  "Economics"        = paste0(base_url, "economics/about/faculty-staff/index.html"),
+  "Entrepreneurship" = paste0(base_url, "entrepreneurship/about/faculty-staff/index.html"),
+  "Finance"          = paste0(base_url, "finance/about/faculty-staff/index.html"),
+  "Information Systems & Analytics" =
+    "https://miamioh.edu/fsb/directory/?up=/query/all/all/Information%20Systems%20--%20Analytics/all",
+  "Marketing"        = paste0(base_url, "marketing/about/faculty-staff/index.html"),
+  "Management"       = paste0(base_url, "management/about/faculty-staff/index.html")
+)
+
+scrape_dept <- function(url, dept) {
+  Sys.sleep(1)
+
+  rows  <- rvest::read_html(url) |> rvest::html_elements("table tr")
+  links <- rvest::html_element(rows, "strong a")
+
+  tibble::tibble(
+    department = dept,
+    name       = links |> rvest::html_text2() |> stringr::str_squish(),
+    position   = rvest::html_element(rows, "i") |> rvest::html_text2() |> stringr::str_squish(),
+    website    = rvest::html_attr(links, "href")
+  ) |>
+    dplyr::filter(!is.na(name))
+}
+
+fsb_directory <- purrr::map2(dept_urls, names(dept_urls), scrape_dept) |>
+  dplyr::bind_rows()
+
+head(fsb_directory)
+```
+
